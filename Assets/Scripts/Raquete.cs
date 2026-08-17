@@ -8,8 +8,7 @@ public class Raquete : NetworkBehaviour
     [SerializeField] private bool jogador1 = true;
 
     private Rigidbody2D rb;
-
-    private float movimentoServidor = 0f;
+    private float movimento = 0f;
 
     private void Awake()
     {
@@ -21,75 +20,91 @@ public class Raquete : NetworkBehaviour
 
     public override void OnNetworkSpawn()
     {
-        // Somente o servidor simula a física das raquetes.
+        Debug.Log(
+            gameObject.name +
+            " | Spawnou | Server: " + IsServer +
+            " | Client: " + IsClient
+        );
+
+        // Só o Host controla a física.
         if (!IsServer)
         {
             rb.simulated = false;
         }
     }
 
-    private void FixedUpdate()
+    private void Update()
     {
         if (!IsSpawned)
             return;
 
-        // CLIENT/HOST envia seu comando para o servidor.
-        if (IsClient)
+        // ==========================
+        // JOGADOR 1 - HOST
+        // ==========================
+
+        if (jogador1 && IsHost)
         {
-            bool souJogadorLocal;
+            movimento = LerJogador1();
 
-            if (jogador1)
-            {
-                // Host = jogador 1
-                souJogadorLocal = NetworkManager.Singleton.IsHost;
-            }
-            else
-            {
-                // Client = jogador 2
-                souJogadorLocal = !NetworkManager.Singleton.IsHost;
-            }
-
-            if (souJogadorLocal)
-            {
-                float movimento = LerTeclas();
-
-                EnviarMovimentoRpc(movimento);
-            }
+            Debug.Log("HOST - movimento P1: " + movimento);
         }
 
-        // SOMENTE o servidor movimenta fisicamente a raquete.
-        if (IsServer)
+        // ==========================
+        // JOGADOR 2 - CLIENT
+        // ==========================
+
+        if (!jogador1 && IsClient && !IsHost)
         {
-            rb.linearVelocity =
-                new Vector2(0f, movimentoServidor * velocidade);
+            float movimentoLocal = LerJogador2();
+
+            Debug.Log("CLIENT - movimento P2: " + movimentoLocal);
+
+            EnviarMovimentoServerRpc(movimentoLocal);
         }
     }
 
-    private float LerTeclas()
+    private void FixedUpdate()
     {
-        if (jogador1)
-        {
-            if (Keyboard.current.wKey.isPressed)
-                return 1f;
+        if (!IsServer)
+            return;
 
-            if (Keyboard.current.sKey.isPressed)
-                return -1f;
-        }
-        else
-        {
-            if (Keyboard.current.upArrowKey.isPressed)
-                return 1f;
+        rb.linearVelocity =
+            new Vector2(0f, movimento * velocidade);
+    }
 
-            if (Keyboard.current.downArrowKey.isPressed)
-                return -1f;
-        }
+    private float LerJogador1()
+    {
+        if (Keyboard.current == null)
+            return 0f;
+
+        if (Keyboard.current.wKey.isPressed)
+            return 1f;
+
+        if (Keyboard.current.sKey.isPressed)
+            return -1f;
 
         return 0f;
     }
 
-    [Rpc(SendTo.Server)]
-    private void EnviarMovimentoRpc(float movimento)
+    private float LerJogador2()
     {
-        movimentoServidor = movimento;
+        if (Keyboard.current == null)
+            return 0f;
+
+        if (Keyboard.current.upArrowKey.isPressed)
+            return 1f;
+
+        if (Keyboard.current.downArrowKey.isPressed)
+            return -1f;
+
+        return 0f;
+    }
+
+    [ServerRpc(RequireOwnership = false)]
+    private void EnviarMovimentoServerRpc(float novoMovimento)
+    {
+        movimento = novoMovimento;
+
+        Debug.Log("HOST recebeu movimento do P2: " + novoMovimento);
     }
 }

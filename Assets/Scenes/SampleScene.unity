@@ -2377,7 +2377,7 @@ MonoBehaviour:
     Address: 127.0.0.1
     Port: 7777
     WebSocketPath: /
-    ServerListenAddress: 127.0.0.1
+    ServerListenAddress: 0.0.0.0
     ClientBindPort: 0
   DebugSimulator:
     PacketDelayMS: 0
@@ -2454,6 +2454,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::NetworkUI
   ipDoHost: 127.0.0.1
   porta: 7777
+  transport: {fileID: 1734337541}
 --- !u!1 &2045399552
 GameObject:
   m_ObjectHideFlags: 0

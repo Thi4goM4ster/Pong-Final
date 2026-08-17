@@ -8,15 +8,8 @@ public class NetworkUI : MonoBehaviour
     [SerializeField] private string ipDoHost = "127.0.0.1";
     [SerializeField] private ushort porta = 7777;
 
-    private UnityTransport transport;
-
-    private void Awake()
-    {
-        if (NetworkManager.Singleton != null)
-        {
-            transport = NetworkManager.Singleton.GetComponent<UnityTransport>();
-        }
-    }
+    [Header("Referência")]
+    [SerializeField] private UnityTransport transport;
 
     public void IniciarHost()
     {
@@ -26,16 +19,19 @@ public class NetworkUI : MonoBehaviour
             return;
         }
 
+        if (transport == null)
+        {
+            Debug.LogError("Unity Transport não foi atribuído no NetworkUI!");
+            return;
+        }
+
         if (NetworkManager.Singleton.IsListening)
         {
             Debug.LogWarning("A rede já está iniciada!");
             return;
         }
 
-        transport.SetConnectionData(
-            "0.0.0.0",
-            porta
-        );
+        transport.SetConnectionData("0.0.0.0", porta);
 
         bool iniciou = NetworkManager.Singleton.StartHost();
 
@@ -50,16 +46,19 @@ public class NetworkUI : MonoBehaviour
             return;
         }
 
+        if (transport == null)
+        {
+            Debug.LogError("Unity Transport não foi atribuído no NetworkUI!");
+            return;
+        }
+
         if (NetworkManager.Singleton.IsListening)
         {
             Debug.LogWarning("A rede já está iniciada!");
             return;
         }
 
-        transport.SetConnectionData(
-            ipDoHost,
-            porta
-        );
+        transport.SetConnectionData(ipDoHost, porta);
 
         bool iniciou = NetworkManager.Singleton.StartClient();
 
