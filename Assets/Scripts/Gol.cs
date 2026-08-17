@@ -1,4 +1,5 @@
 using UnityEngine;
+using Unity.Netcode;
 
 public class Gol : MonoBehaviour
 {
@@ -13,15 +14,15 @@ public class Gol : MonoBehaviour
 
     private void OnTriggerEnter2D(Collider2D outro)
     {
-        // Verifica se foi a bola que entrou no gol
+        if (!NetworkManager.Singleton.IsServer)
+            return;
+
         if (!outro.CompareTag("Bola"))
             return;
 
-        // Pega a pontuação atual
         int p1 = gameManager.pontuacaoDoJogador1;
         int p2 = gameManager.pontuacaoDoJogador2;
 
-        // Dá o ponto para o jogador correto
         if (pontoParaJogador1)
         {
             p1++;
@@ -31,13 +32,11 @@ public class Gol : MonoBehaviour
             p2++;
         }
 
-        // Atualiza o placar
         gameManager.AtualizarPlacar(p1, p2);
 
-        // Reposiciona a bola
         if (bola != null)
         {
-            bola.transform.position = Vector3.zero;
+            bola.ReiniciarBola();
         }
     }
 }
